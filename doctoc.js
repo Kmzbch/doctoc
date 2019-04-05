@@ -2,12 +2,12 @@
 
 'use strict';
 
-var path      =  require('path')
-  , fs        =  require('fs')
-  , minimist  =  require('minimist')
-  , file      =  require('./lib/file')
-  , transform =  require('./lib/transform')
-  , files;
+var path = require('path'),
+  fs = require('fs'),
+  minimist = require('minimist'),
+  file = require('./lib/file'),
+  transform = require('./lib/transform'),
+  files;
 
 function cleanPath(path) {
   var homeExpanded = (path.indexOf('~') === 0) ? process.env.HOME + path.substr(1) : path;
@@ -21,14 +21,20 @@ function transformAndSave(files, mode, maxHeaderLevel, title, notitle, entryPref
 
   var transformed = files
     .map(function (x) {
-      var content = fs.readFileSync(x.path, 'utf8')
-        , result = transform(content, mode, maxHeaderLevel, title, notitle, entryPrefix);
+      var content = fs.readFileSync(x.path, 'utf8'),
+        result = transform(content, mode, maxHeaderLevel, title, notitle, entryPrefix);
       result.path = x.path;
       return result;
     });
-  var changed = transformed.filter(function (x) { return x.transformed; })
-    , unchanged = transformed.filter(function (x) { return !x.transformed; })
-    , toc = transformed.filter(function (x) { return x.toc; })
+  var changed = transformed.filter(function (x) {
+      return x.transformed;
+    }),
+    unchanged = transformed.filter(function (x) {
+      return !x.transformed;
+    }),
+    toc = transformed.filter(function (x) {
+      return x.toc;
+    })
 
   if (stdOut) {
     toc.forEach(function (x) {
@@ -40,12 +46,13 @@ function transformAndSave(files, mode, maxHeaderLevel, title, notitle, entryPref
     console.log('"%s" is up to date', x.path);
   });
 
-  changed.forEach(function (x) { 
+  changed.forEach(function (x) {
     if (stdOut) {
       console.log('==================\n\n"%s" should be updated', x.path)
     } else {
       console.log('"%s" will be updated', x.path);
-      fs.writeFileSync(x.path, x.data, 'utf8');
+      console.log(x.data);
+      //      fs.writeFileSync(x.path, x.data, 'utf8');
     }
   });
 }
@@ -65,20 +72,22 @@ function printUsageAndExit(isErr) {
 }
 
 var modes = {
-    bitbucket : 'bitbucket.org'
-  , nodejs    : 'nodejs.org'
-  , github    : 'github.com'
-  , gitlab    : 'gitlab.com'
-  , ghost     : 'ghost.org'
+  bitbucket: 'bitbucket.org',
+  nodejs: 'nodejs.org',
+  github: 'github.com',
+  gitlab: 'gitlab.com',
+  ghost: 'ghost.org'
 }
 
 var mode = modes['github'];
 
-var argv = minimist(process.argv.slice(2)
-    , { boolean: [ 'h', 'help', 'T', 'notitle', 's', 'stdout'].concat(Object.keys(modes))
-    , string: [ 'title', 't', 'maxlevel', 'm', 'entryprefix' ]
-    , unknown: function(a) { return (a[0] == '-' ? (console.error('Unknown option(s): ' + a), printUsageAndExit(true)) : true); }
-    });
+var argv = minimist(process.argv.slice(2), {
+  boolean: ['h', 'help', 'T', 'notitle', 's', 'stdout'].concat(Object.keys(modes)),
+  string: ['title', 't', 'maxlevel', 'm', 'entryprefix'],
+  unknown: function (a) {
+    return (a[0] == '-' ? (console.error('Unknown option(s): ' + a), printUsageAndExit(true)) : true);
+  }
+});
 
 if (argv.h || argv.help) {
   printUsageAndExit();
@@ -96,18 +105,22 @@ var entryPrefix = argv.entryprefix || '-';
 var stdOut = argv.s || argv.stdout
 
 var maxHeaderLevel = argv.m || argv.maxlevel;
-if (maxHeaderLevel && isNaN(maxHeaderLevel) || maxHeaderLevel < 0) { console.error('Max. heading level specified is not a positive number: ' + maxHeaderLevel), printUsageAndExit(true); }
+if (maxHeaderLevel && isNaN(maxHeaderLevel) || maxHeaderLevel < 0) {
+  console.error('Max. heading level specified is not a positive number: ' + maxHeaderLevel), printUsageAndExit(true);
+}
 
 for (var i = 0; i < argv._.length; i++) {
-  var target = cleanPath(argv._[i])
-    , stat = fs.statSync(target)
+  var target = cleanPath(argv._[i]),
+    stat = fs.statSync(target)
 
   if (stat.isDirectory()) {
-    console.log ('\nDocToccing "%s" and its sub directories for %s.', target, mode);
+    console.log('\nDocToccing "%s" and its sub directories for %s.', target, mode);
     files = file.findMarkdownFiles(target);
   } else {
-    console.log ('\nDocToccing single file "%s" for %s.', target, mode);
-    files = [{ path: target }];
+    console.log('\nDocToccing single file "%s" for %s.', target, mode);
+    files = [{
+      path: target
+    }];
   }
 
   transformAndSave(files, mode, maxHeaderLevel, title, notitle, entryPrefix, stdOut);
