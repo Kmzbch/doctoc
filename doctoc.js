@@ -51,8 +51,8 @@ function transformAndSave(files, mode, maxHeaderLevel, title, notitle, entryPref
       console.log('==================\n\n"%s" should be updated', x.path)
     } else {
       console.log('"%s" will be updated', x.path);
-      console.log(x.data);
       //      fs.writeFileSync(x.path, x.data, 'utf8');
+      console.log(x.data);
     }
   });
 }
@@ -126,6 +126,10 @@ for (var i = 0; i < argv._.length; i++) {
   transformAndSave(files, mode, maxHeaderLevel, title, notitle, entryPrefix, stdOut);
 
   console.log('\nEverything is OK.');
+}
+
+function dummyFunc() {
+  console.log("dummy!");
 }
 
 module.exports.transform = transform;
